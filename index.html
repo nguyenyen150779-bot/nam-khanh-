@@ -396,176 +396,122 @@ toast.classList.add('translate-y-20', 'opacity-0');
 }, 3500);
 }
 
-// ---------- CẤU HÌNH GIỌNG ĐỀU (chỉnh ở đây nếu cần) ----------
-const STYLE_PROMPT = "Đọc bằng giọng tiếng Việt chuẩn, trưởng thành, tự nhiên, giữ nguyên một giọng duy nhất, cao độ, tốc độ và âm lượng ổn định từ đầu đến cuối: ";
-const MAX_CHUNK_CHARS = 300;   // mỗi lần gửi tối đa ~300 ký tự -> giọng không bị "trôi"
-const MAX_RETRIES = 3;         // tự thử lại nếu Gemini trả về rỗng / lỗi tạm thời
-const TTS_TEMPERATURE = 0.2;   // thấp = giọng ổn định hơn
-const TTS_SEED = 42;           // cố định seed để các lần tạo giống nhau hơn
-const SPEED_FACTOR = 1.15;     // đặt 1.0 nếu thấy giọng bị cao/the thé (1.15 làm cao độ tăng lên)
-const TARGET_RMS = 3000;       // mức âm lượng chuẩn cho mọi đoạn
-const GAP_SENTENCE_MS = 220;   // khoảng nghỉ giữa các đoạn gửi
-const GAP_PARAGRAPH_MS = 450;  // khoảng nghỉ khi xuống dòng
+// ---------- CẤU HÌNH ----------
+const MAX_CHUNK_CHARS = 600;   // kịch bản <= 600 ký tự: gửi 1 lần duy nhất như bản gốc
+const MAX_RETRIES = 2;         // chỉ thử lại khi Gemini trả về rỗng / lỗi máy chủ
+const SPEED_FACTOR = 1.15;     // 1.0 = giữ nguyên giọng gốc, không đổi cao độ
+const GAP_MS = 200;            // khoảng nghỉ giữa các đoạn (chỉ khi kịch bản dài)
+const previewCache = {};       // nghe thử lần 2 trở đi phát ngay, không gọi API
 
-// Tách kịch bản thành các đoạn ngắn theo dòng -> câu -> dấu phẩy
+// Chỉ tách khi kịch bản dài; tách theo câu, mỗi đoạn tối đa MAX_CHUNK_CHARS
 function splitIntoChunks(text) {
+  const sentences = (text.replace(/\s*\n+\s*/g, ' \n ').match(/[^.!?…\n]+[.!?…]*["”')\]]*|\n/g) || [text])
+    .map(s => s.trim()).filter(Boolean);
   const chunks = [];
-  text.split(/\n+/).map(p => p.trim()).filter(Boolean).forEach(par => {
-    const pieces = [];
-    (par.match(/[^.!?…]+[.!?…]*["”')\]]*/g) || [par]).forEach(s => {
-      s = s.trim();
-      if (!s) return;
-      if (s.length > MAX_CHUNK_CHARS) {
-        (s.match(/[^,;:]+[,;:]?/g) || [s]).map(p => p.trim()).filter(Boolean).forEach(p => pieces.push(p));
-      } else {
-        pieces.push(s);
-      }
-    });
-    let cur = '';
-    pieces.forEach(p => {
-      if (cur && (cur + ' ' + p).length > MAX_CHUNK_CHARS) {
-        chunks.push({ text: cur, endOfParagraph: false });
-        cur = p;
-      } else {
-        cur = cur ? cur + ' ' + p : p;
-      }
-    });
-    if (cur) chunks.push({ text: cur, endOfParagraph: true });
+  let cur = '';
+  sentences.forEach(s => {
+    if (cur && (cur + ' ' + s).length > MAX_CHUNK_CHARS) { chunks.push(cur); cur = s; }
+    else cur = cur ? cur + ' ' + s : s;
   });
+  if (cur) chunks.push(cur);
   return chunks;
 }
 
-// Gọi API cho 1 đoạn, tự thử lại khi lỗi tạm thời
+// Gọi API cho 1 đoạn — cấu hình y hệt bản gốc
 async function fetchChunkAudio(text, voiceId, apiKey) {
   const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
   const payload = {
-    contents: [{ parts: [{ text: STYLE_PROMPT + text }] }],
+    contents: [{ parts: [{ text: text }] }],
     generationConfig: {
-      temperature: TTS_TEMPERATURE,
-      seed: TTS_SEED,
       responseModalities: ["AUDIO"],
-      speechConfig: {
-        voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceId } }
-      }
+      speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceId } } }
     }
   };
 
   let lastErr;
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    let response;
     try {
-      let response;
-      try {
-        response = await fetch(apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-      } catch (networkErr) {
-        throw new Error("Lỗi kết nối mạng hoặc không gửi được yêu cầu. Vui lòng kiểm tra API Key!");
-      }
+      response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } catch (networkErr) {
+      throw new Error("Lỗi kết nối mạng hoặc không gửi được yêu cầu. Vui lòng kiểm tra API Key!");
+    }
 
-      if (response.status === 400 || response.status === 403) {
-        apiModal.classList.remove('hidden');
-        const keyErr = new Error('Vui lòng kiểm tra hoặc dán lại Gemini API Key chính xác để tạo giọng nói!');
-        keyErr.fatal = true;
-        throw keyErr;
-      }
-      if (!response.ok) throw new Error(`Lỗi khởi tạo giọng nói (${response.status})`);
-
+    if (response.status === 400 || response.status === 403) {
+      apiModal.classList.remove('hidden');
+      throw new Error('Vui lòng kiểm tra hoặc dán lại Gemini API Key chính xác để tạo giọng nói!');
+    }
+    if (response.status === 429) {
+      throw new Error('Gemini báo hết lượt/đang quá tải. Đợi khoảng 1 phút rồi thử lại nhé!');
+    }
+    if (!response.ok) {
+      lastErr = new Error(`Lỗi khởi tạo giọng nói (${response.status})`);
+    } else {
       const result = await response.json();
       const part = result?.candidates?.[0]?.content?.parts?.[0];
       const audioData = part?.inlineData?.data;
-      if (!audioData) throw new Error('Dữ liệu âm thanh phản hồi bị trống. Hãy thử lại!');
-
-      const mimeType = part.inlineData.mimeType || "audio/L16;rate=24000";
-      const rateMatch = mimeType.match(/rate=(\d+)/);
-      return {
-        pcm: new Int16Array(base64ToArrayBuffer(audioData)),
-        sampleRate: rateMatch ? parseInt(rateMatch[1], 10) : 24000
-      };
-    } catch (err) {
-      if (err.fatal) throw err;
-      lastErr = err;
-      if (attempt < MAX_RETRIES) await new Promise(r => setTimeout(r, 1500 * attempt));
+      if (audioData) {
+        const mimeType = part.inlineData.mimeType || "audio/L16;rate=24000";
+        const rateMatch = mimeType.match(/rate=(\d+)/);
+        return {
+          pcm: new Int16Array(base64ToArrayBuffer(audioData)),
+          sampleRate: rateMatch ? parseInt(rateMatch[1], 10) : 24000
+        };
+      }
+      lastErr = new Error('Dữ liệu âm thanh phản hồi bị trống. Hãy thử lại giọng khác!');
     }
+    if (attempt < MAX_RETRIES) await new Promise(r => setTimeout(r, 1000));
   }
   throw lastErr;
 }
 
-// Cắt khoảng lặng thừa đầu/cuối mỗi đoạn
-function trimSilence(pcm, sampleRate, threshold = 400, padMs = 60) {
-  let start = 0, end = pcm.length - 1;
-  while (start < end && Math.abs(pcm[start]) < threshold) start++;
-  while (end > start && Math.abs(pcm[end]) < threshold) end--;
-  const pad = Math.round(sampleRate * padMs / 1000);
-  return pcm.slice(Math.max(0, start - pad), Math.min(pcm.length, end + pad + 1));
-}
-
-// Đưa mọi đoạn về cùng mức âm lượng
-function normalizeLoudness(pcm) {
-  let sum = 0, n = 0, peak = 0;
-  for (let i = 0; i < pcm.length; i++) {
-    const a = Math.abs(pcm[i]);
-    if (a > peak) peak = a;
-    if (a > 300) { sum += a * a; n++; }
-  }
-  if (!n || !peak) return pcm;
-  const rms = Math.sqrt(sum / n);
-  let gain = Math.min(Math.max(TARGET_RMS / rms, 0.4), 3);
-  gain = Math.min(gain, 30000 / peak); // không để bị vỡ tiếng
-  const out = new Int16Array(pcm.length);
-  for (let i = 0; i < pcm.length; i++) {
-    out[i] = Math.max(-32768, Math.min(32767, Math.round(pcm[i] * gain)));
-  }
-  return out;
-}
-
-// Ghép các đoạn lại, chèn khoảng nghỉ đều nhau
-function joinPcm(pieces, sampleRate) {
-  const gaps = pieces.map((p, i) =>
-    i === pieces.length - 1 ? 0 : Math.round(sampleRate * (p.endOfParagraph ? GAP_PARAGRAPH_MS : GAP_SENTENCE_MS) / 1000)
-  );
-  const total = pieces.reduce((s, p, i) => s + p.pcm.length + gaps[i], 0);
+// Ghép các đoạn (nguyên bản, không chỉnh sửa âm thanh) với khoảng nghỉ nhỏ
+function joinPcm(parts, sampleRate) {
+  const gap = Math.round(sampleRate * GAP_MS / 1000);
+  const total = parts.reduce((s, p, i) => s + p.length + (i < parts.length - 1 ? gap : 0), 0);
   const merged = new Int16Array(total);
   let offset = 0;
-  pieces.forEach((p, i) => {
-    merged.set(p.pcm, offset);
-    offset += p.pcm.length + gaps[i];
-  });
+  parts.forEach((p, i) => { merged.set(p, offset); offset += p.length + gap; });
   return merged;
 }
 
-// Hàm chính (giữ nguyên tên và tham số như bản cũ)
 async function generateSpeechInternal(text, voiceObj, isPreview = false) {
   const cleanText = text.trim();
-  const userApiKey = localStorage.getItem('gemini_tts_apikey') || "";
 
+  // Nghe thử: dùng lại kết quả đã tạo
+  if (isPreview && previewCache[voiceObj.id]) {
+    updateActivePlayer(previewCache[voiceObj.id], voiceObj, cleanText);
+    return previewCache[voiceObj.id];
+  }
+
+  const userApiKey = localStorage.getItem('gemini_tts_apikey') || "";
   const chunks = splitIntoChunks(cleanText);
   if (!chunks.length) throw new Error('Kịch bản đang trống!');
 
-  const pieces = [];
+  const parts = [];
   let sampleRate = 24000;
-
-  // Tạo tuần tự từng đoạn với CÙNG giọng + CÙNG cấu hình
   for (let i = 0; i < chunks.length; i++) {
     if (!isPreview && chunks.length > 1) {
       generateBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Đang đọc ${i + 1}/${chunks.length}...`;
     }
-    const { pcm, sampleRate: sr } = await fetchChunkAudio(chunks[i].text, voiceObj.id, userApiKey);
-    sampleRate = sr;
-    pieces.push({
-      pcm: normalizeLoudness(trimSilence(pcm, sr)),
-      endOfParagraph: chunks[i].endOfParagraph
-    });
+    const r = await fetchChunkAudio(chunks[i], voiceObj.id, userApiKey);
+    sampleRate = r.sampleRate;
+    parts.push(r.pcm);
   }
 
-  const merged = joinPcm(pieces, sampleRate);
-  const wavBlob = pcmToWav(merged, Math.round(sampleRate * SPEED_FACTOR));
+  const pcm = parts.length === 1 ? parts[0] : joinPcm(parts, sampleRate);
+  const wavBlob = pcmToWav(pcm, Math.round(sampleRate * SPEED_FACTOR));
   const audioUrl = URL.createObjectURL(wavBlob);
 
   updateActivePlayer(audioUrl, voiceObj, cleanText);
 
-  if (!isPreview) {
+  if (isPreview) {
+    previewCache[voiceObj.id] = audioUrl;
+  } else {
     addHistoryItem({
       id: Date.now().toString(),
       voice: voiceObj,
