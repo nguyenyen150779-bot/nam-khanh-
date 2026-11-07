@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Review Threads - Voice Studio Cute</title>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- FontAwesome Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- Google Fonts: Be Vietnam Pro & Quicksand -->
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+theme: {
+extend: {
+colors: {
+cutePink: {
+50: '#fff1f2',
+100: '#ffe4e6',
+200: '#fecdd3',
+300: '#fda4af',
+400: '#fb7185',
+500: '#f43f5e',
+600: '#e11d48',
+},
+cuteGreen: {
+50: '#f0fdf4',
+100: '#dcfce7',
+200: '#bbf7d0',
+300: '#86efac',
+400: '#4ade80',
+500: '#22c55e',
+600: '#16a34a',
+},
+pastelBg: '#fffafb'
+},
+fontFamily: {
+sans: ['Quicksand', 'Be Vietnam Pro', 'sans-serif'],
+}
+}
+}
+}
+</script>
+<style>
+body {
+background-color: #fdf2f8;
+background-image: radial-gradient(#bbf7d0 1.5px, transparent 1.5px), radial-gradient(#fecdd3 1.5px, #fdf2f8 1.5px);
+background-size: 60px 60px;
+background-position: 0 0, 30px 30px;
+font-family: 'Quicksand', 'Be Vietnam Pro', sans-serif;
+}
+/* Custom Scrollbar Cute */
+::-webkit-scrollbar {
+width: 8px;
+height: 8px;
+}
+::-webkit-scrollbar-track {
+background: #ffe4e6;
+border-radius: 10px;
+}
+::-webkit-scrollbar-thumb {
+background: #86efac;
+border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+background: #4ade80;
+}
+.cute-card {
+background: rgba(255, 255, 255, 0.95);
+backdrop-filter: blur(10px);
+border: 3px solid #fecdd3;
+box-shadow: 0 10px 25px -5px rgba(244, 63, 94, 0.1), 0 8px 10px -6px rgba(34, 197, 94, 0.1);
+}
+.cute-button-pink {
+background: linear-gradient(135deg, #fb7185 0%, #f43f5e 100%);
+box-shadow: 0 4px 14px 0 rgba(244, 63, 94, 0.39);
+transition: all 0.2s ease-in-out;
+}
+.cute-button-pink:hover {
+transform: translateY(-2px);
+box-shadow: 0 6px 20px 0 rgba(244, 63, 94, 0.5);
+}
+.cute-button-green {
+background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+box-shadow: 0 4px 14px 0 rgba(34, 197, 94, 0.39);
+transition: all 0.2s ease-in-out;
+}
+.cute-button-green:hover {
+transform: translateY(-2px);
+box-shadow: 0 6px 20px 0 rgba(34, 197, 94, 0.5);
+}
+</style>
+</head>
+<body class="text-gray-700 min-h-screen flex flex-col justify-between p-3 md:p-6">
+
+<!-- Header Section -->
+<header class="max-w-5xl mx-auto w-full mb-6">
+<div class="cute-card rounded-3xl p-4 md:p-6 flex flex-col md:flex-row items-center justify-between gap-4 border-2 border-pink-300">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 md:w-14 md:h-14 bg-pink-100 rounded-2xl flex items-center justify-center border-2 border-pink-400 text-pink-500 shadow-inner">
+<i class="fa-solid font-bold fa-microphone-lines text-2xl md:text-3xl animate-bounce"></i>
+</div>
+<div>
+<h1 class="text-xl md:text-2xl font-bold text-pink-600 flex items-center gap-2">
+Review Threads TTS <span class="bg-emerald-100 text-emerald-700 text-xs px-2.5 py-1 rounded-full font-semibold border border-emerald-300">Cute Studio 🌸</span>
+</h1>
+<p class="text-xs md:text-sm text-gray-500 font-medium">Chuyển văn bản thành giọng đọc review kịch tính, chuẩn CapCut!</p>
+</div>
+</div>
+
+<!-- Settings / API Modal Trigger -->
+<button id="openApiModalBtn" class="px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-semibold text-xs md:text-sm rounded-2xl border-2 border-emerald-300 transition flex items-center gap-2 shadow-sm">
+<i class="fa-solid fa-key text-emerald-600"></i> Cấu hình API Key
+</button>
+</div>
+</header>
+
+<!-- Main Content Grid -->
+<main class="max-w-5xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow">
+
+<!-- Left Column: TTS Control Panel (7 Cols) -->
+<section class="lg:col-span-7 flex flex-col gap-5">
+<div class="cute-card rounded-3xl p-5 md:p-6 flex flex-col gap-4 border-2 border-pink-200">
+
+<!-- Text Area Input -->
+<div>
+<div class="flex justify-between items-center mb-2">
+<label for="ttsInput" class="text-xs md:text-sm font-bold text-pink-600 flex items-center gap-2">
+<i class="fa-solid fa-file-pen text-emerald-500"></i> Kịch bản Threads của bạn:
+</label>
+<span id="charCounter" class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">0 ký tự</span>
+</div>
+<textarea id="ttsInput" rows="6" class="w-full p-3.5 text-xs md:text-sm text-gray-700 bg-white border-2 border-pink-200 rounded-2xl focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none transition resize-y shadow-inner" placeholder="Nhập văn bản bài review Threads tại đây... Ví dụ: Chuyện là hôm qua mình có đi trải nghiệm một quán ăn vô cùng độc lạ..."></textarea>
+</div>
+
+<!-- Voice Selection (7 Unique Voices) -->
+<div>
+<label class="text-xs md:text-sm font-bold text-pink-600 mb-2 flex items-center gap-2">
+<i class="fa-solid fa-users text-pink-500"></i> Chọn Giọng Đọc (7 Giọng Độc Quyền - Nghe Thử Trực Tiếp):
+</label>
+
+<div id="voiceGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-60 overflow-y-auto pr-1">
+<!-- Voices dynamically generated via JS -->
+</div>
+</div>
+
+<!-- Action Button -->
+<button id="generateBtn" class="cute-button-pink w-full py-3.5 text-white font-bold text-sm md:text-base rounded-2xl flex items-center justify-center gap-2 shadow-lg">
+<i class="fa-solid fa-wand-magic-sparkles"></i> Tạo Giọng Nói Ngay!
+</button>
+</div>
+</section>
+
+<!-- Right Column: Player & History (5 Cols) -->
+<section class="lg:col-span-5 flex flex-col gap-5">
+
+<!-- Current Audio Preview Player -->
+<div class="cute-card rounded-3xl p-5 border-2 border-emerald-200 flex flex-col gap-3">
+<h2 class="text-xs md:text-sm font-bold text-emerald-600 flex items-center gap-2">
+<i class="fa-solid fa-circle-play text-emerald-500"></i> Bản Đọc Hiện Tại
+</h2>
+
+<div id="playerPlaceholder" class="py-8 flex flex-col items-center justify-center border-2 border-dashed border-emerald-200 rounded-2xl bg-emerald-50/50 text-emerald-600 text-center p-4">
+<i class="fa-solid fa-compact-disc text-3xl mb-2 animate-spin text-pink-400" style="animation-duration: 8s;"></i>
+<p class="text-xs font-semibold">Chưa có giọng nói nào được tạo</p>
+<p class="text-[11px] text-gray-400">Nhập kịch bản và bấm tạo để nghe thử nhé!</p>
+</div>
+
+<div id="activePlayerContainer" class="hidden flex-col gap-3">
+<div class="p-3 bg-pink-50 rounded-2xl border border-pink-200">
+<div class="flex justify-between items-center mb-1">
+<span id="activeVoiceBadge" class="bg-pink-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">Giọng Nữ</span>
+<span id="activeVoiceName" class="text-xs font-bold text-pink-700">Lan - Nữ</span>
+</div>
+<p id="activeTextPreview" class="text-xs text-gray-600 line-clamp-2 italic">"Chuyện là hôm qua mình..."</p>
+</div>
+
+<!-- Enhanced Audio Player -->
+<div class="bg-white p-2.5 rounded-2xl border border-emerald-300 shadow-inner">
+<audio id="mainAudioPlayer" controls class="w-full h-10 outline-none">
+Trình duyệt không hỗ trợ phát âm thanh.
+</audio>
+</div>
+
+<a id="downloadCapCutBtn" href="#" download="threads_voice.wav" class="cute-button-green py-2.5 px-4 text-white font-bold text-xs md:text-sm rounded-xl text-center flex items-center justify-center gap-2 shadow-md">
+<i class="fa-solid fa-download"></i> Tải File Âm Thanh CapCut (.WAV)
+</a>
+</div>
+</div>
+
+<!-- History List (Auto expired in 30 minutes) -->
+<div class="cute-card rounded-3xl p-5 border-2 border-pink-200 flex flex-col gap-3 flex-grow">
+<div class="flex justify-between items-center">
+<h2 class="text-xs md:text-sm font-bold text-pink-600 flex items-center gap-2">
+<i class="fa-solid fa-clock-rotate-left text-pink-500"></i> Lịch Sử Đã Tạo (Lưu 30 Phút)
+</h2>
+<span class="text-[10px] font-semibold text-pink-500 bg-pink-100 px-2 py-0.5 rounded-full border border-pink-200">
+<i class="fa-solid fa-shield-cat"></i> Tự xóa khi hết hạn
+</span>
+</div>
+
+<div id="historyList" class="flex flex-col gap-2.5 overflow-y-auto max-h-72 pr-1">
+<!-- Dynamic history items -->
+</div>
+</div>
+</section>
+
+</main>
+
+<!-- Footer -->
+<footer class="max-w-5xl mx-auto w-full mt-6 text-center text-xs text-gray-500 font-medium">
+<p>Studio Đọc Giọng Review Threads © 2026 - Tối Ưu Cho CapCut & TikTok Studio 🌸</p>
+</footer>
+
+<!-- API Key Modal -->
+<div id="apiModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+<div class="cute-card rounded-3xl p-6 max-w-md w-full border-4 border-pink-300 animate-fade-in">
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-base font-bold text-pink-600 flex items-center gap-2">
+<i class="fa-solid fa-key text-pink-500"></i> Cấu hình Gemini API Key
+</h3>
+<button id="closeApiModalBtn" class="text-gray-400 hover:text-pink-500 text-lg">
+<i class="fa-solid fa-xmark"></i>
+</button>
+</div>
+
+<!-- Hướng dẫn các bước lấy API Key -->
+<div class="bg-pink-50 p-3 rounded-2xl border border-pink-200 mb-4 text-xs text-pink-800 space-y-1.5">
+<p class="font-bold text-pink-600"><i class="fa-solid fa-lightbulb"></i> Các bước dán API Key:</p>
+<p>1. Truy cập <a href="https://aistudio.google.com/app/apikey" target="_blank" class="underline font-bold text-emerald-600 hover:text-emerald-700">Google AI Studio (Miễn phí)</a></p>
+<p>2. Đăng nhập Gmail và chọn <b>"Create API Key"</b></p>
+<p>3. Copy mã khóa và dán vào ô bên dưới 👇</p>
+</div>
+
+<input type="password" id="customApiKey" class="w-full p-3 text-xs md:text-sm bg-gray-50 border-2 border-pink-200 rounded-xl mb-4 focus:ring-2 focus:ring-pink-400 outline-none" placeholder="Dán Gemini API Key của bạn vào đây (AIzaSy...)">
+<div class="flex gap-2">
+<button id="saveApiKeyBtn" class="cute-button-pink flex-1 py-2.5 text-white font-bold text-xs md:text-sm rounded-xl">Lưu Cấu Hình</button>
+<button id="clearApiKeyBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold text-xs md:text-sm px-4 py-2.5 rounded-xl">Xóa Key</button>
+</div>
+</div>
+</div>
+
+<!-- Notification Toast -->
+<div id="toast" class="fixed bottom-5 right-5 transform translate-y-20 opacity-0 transition-all duration-300 cute-card px-4 py-3 rounded-2xl border-2 flex items-center gap-2.5 shadow-xl text-xs md:text-sm font-bold z-50">
+<i id="toastIcon" class="fa-solid fa-circle-check text-emerald-500 text-lg"></i>
+<span id="toastMsg" class="text-gray-700">Thông báo ở đây</span>
+</div>
+
+<!-- JavaScript Logic -->
+<script>
+// 7 Giọng nói Tiếng Việt người lớn, trưởng thành, dứt khoát chuẩn Review Threads
+const SAMPLE_TEXT_CUSTOM = "chuyện là thế này tao không gay nhưng có chút rung động với mới bạn trai ở lớp";
+
+const VOICES = [
+{ id: 'Kore', name: '1. Phương Lan - Nữ (Trưởng Thành, Dứt Khoát)', gender: 'Nữ', tag: 'Người lớn / Sâu lắng', desc: 'Giọng người lớn rõ chữ, phát âm rành rọt, tự nhiên', sampleText: SAMPLE_TEXT_CUSTOM, icon: 'fa-user' },
+{ id: 'Puck', name: '2. Yến Nhi - Nữ (Thanh Tiếng, Tự Nhiên)', gender: 'Nữ', tag: 'Giọng sáng / Rõ từ', desc: 'Tông giọng nữ trưởng thành, đọc nhanh dứt khoát', sampleText: SAMPLE_TEXT_CUSTOM, icon: 'fa-user-nurse' },
+{ id: 'Fenrir', name: '3. Vũ Sơn - Nam (Trưởng Thành, Rõ Ràng)', gender: 'Nam', tag: 'Nam trầm / Dứt khoát', desc: 'Giọng nam người lớn, dứt khoát, đọc liền mạch', sampleText: SAMPLE_TEXT_CUSTOM, icon: 'fa-user-tie' },
+{ id: 'Zephyr', name: '4. Thu Đào - Nữ (Trưởng Thành, Thanh Tiếng)', gender: 'Nữ', tag: 'Chắn chắn / Tròn vành', desc: 'Giọng đọc người lớn thanh thoát, phát âm dứt khoát', sampleText: SAMPLE_TEXT_CUSTOM, icon: 'fa-user-graduate' },
+{ id: 'Aoede', name: '5. Hải Linh - Nữ (Người Lớn, Nhịp Nhanh)', gender: 'Nữ', tag: 'Điềm đạc / Rõ từ', desc: 'Giọng nữ trưởng thành tự nhiên, ngắt nghỉ liền mạch', sampleText: SAMPLE_TEXT_CUSTOM, icon: 'fa-user-ninja' },
+{ id: 'Charon', name: '6. Bảo Huệ - Nam (Nam Trầm, Điềm Đạc)', gender: 'Nam', tag: 'Nam trưởng thành', desc: 'Giọng nam đứng tuổi, phát âm rành rọt chuẩn review', sampleText: SAMPLE_TEXT_CUSTOM, icon: 'fa-user-shield' },
+{ id: 'Orus', name: '7. Hoàng Nam - Nam (Dứt Khoát, Điềm Đạc)', gender: 'Nam', tag: 'Đứng tuổi / Rõ chữ', desc: 'Giọng nam người lớn đọc liền 1 mạch vô cùng dứt khoát', sampleText: SAMPLE_TEXT_CUSTOM, icon: 'fa-user-astronaut' }
+];
+
+let selectedVoiceId = 'Kore';
+let audioHistory = [];
+const HISTORY_EXPIRATION_MS = 30 * 60 * 1000;
+
+const ttsInput = document.getElementById('ttsInput');
+const charCounter = document.getElementById('charCounter');
+const voiceGrid = document.getElementById('voiceGrid');
+const generateBtn = document.getElementById('generateBtn');
+const historyList = document.getElementById('historyList');
+
+const playerPlaceholder = document.getElementById('playerPlaceholder');
+const activePlayerContainer = document.getElementById('activePlayerContainer');
+const mainAudioPlayer = document.getElementById('mainAudioPlayer');
+const activeVoiceBadge = document.getElementById('activeVoiceBadge');
+const activeVoiceName = document.getElementById('activeVoiceName');
+const activeTextPreview = document.getElementById('activeTextPreview');
+const downloadCapCutBtn = document.getElementById('downloadCapCutBtn');
+
+const apiModal = document.getElementById('apiModal');
+const openApiModalBtn = document.getElementById('openApiModalBtn');
+const closeApiModalBtn = document.getElementById('closeApiModalBtn');
+const customApiKeyInput = document.getElementById('customApiKey');
+const saveApiKeyBtn = document.getElementById('saveApiKeyBtn');
+const clearApiKeyBtn = document.getElementById('clearApiKeyBtn');
+
+window.addEventListener('DOMContentLoaded', () => {
+renderVoices();
+loadHistoryFromStorage();
+cleanExpiredHistory();
+setInterval(cleanExpiredHistory, 30000);
+
+const savedKey = localStorage.getItem('gemini_tts_apikey');
+if (savedKey) customApiKeyInput.value = savedKey;
+});
+
+function renderVoices() {
+voiceGrid.innerHTML = '';
+VOICES.forEach(voice => {
+const isSelected = voice.id === selectedVoiceId;
+const card = document.createElement('div');
+card.className = `p-2.5 rounded-2xl border-2 cursor-pointer transition flex items-center justify-between gap-2 ${
+isSelected
+? 'border-pink-500 bg-pink-100/80 shadow-sm'
+: 'border-pink-100 bg-white hover:border-pink-300'
+}`;
+
+const isFemale = voice.gender === 'Nữ';
+const genderBadgeClass = isFemale ? 'bg-pink-500 text-white' : 'bg-emerald-500 text-white';
+
+card.innerHTML = `
+<div class="flex items-center gap-2.5 min-w-0 flex-1" onclick="selectVoice('${voice.id}')">
+<div class="w-8 h-8 rounded-xl ${isFemale ? 'bg-pink-200 text-pink-600' : 'bg-emerald-200 text-emerald-600'} flex items-center justify-center shrink-0 text-sm">
+<i class="fa-solid ${voice.icon}"></i>
+</div>
+<div class="min-w-0 flex-1">
+<div class="flex items-center gap-1.5 mb-0.5">
+<span class="text-[9px] font-bold px-1.5 py-0.2 rounded-full ${genderBadgeClass}">${voice.gender}</span>
+<h4 class="text-xs font-bold text-gray-800 truncate">${voice.name}</h4>
+</div>
+<p class="text-[10px] text-gray-500 truncate">${voice.desc}</p>
+</div>
+</div>
+<button onclick="previewVoice(event, '${voice.id}')" class="px-2 py-1 bg-pink-200 hover:bg-pink-300 text-pink-700 text-[10px] font-bold rounded-lg shrink-0 flex items-center gap-1 transition" title="Nghe thử giọng này">
+<i class="fa-solid fa-volume-high"></i> Thử
+</button>
+`;
+
+voiceGrid.appendChild(card);
+});
+}
+
+window.selectVoice = function(id) {
+selectedVoiceId = id;
+renderVoices();
+};
+
+window.previewVoice = async function(event, voiceId) {
+event.stopPropagation();
+const voiceObj = VOICES.find(v => v.id === voiceId);
+if (!voiceObj) return;
+
+showToast(`Đang phát giọng thử: ${voiceObj.name}...`, 'info');
+// isPreview = true -> Không lưu vào lịch sử
+await generateSpeechInternal(voiceObj.sampleText, voiceObj, true);
+};
+
+ttsInput.addEventListener('input', () => {
+charCounter.textContent = `${ttsInput.value.length} ký tự`;
+});
+
+openApiModalBtn.addEventListener('click', () => apiModal.classList.remove('hidden'));
+closeApiModalBtn.addEventListener('click', () => apiModal.classList.add('hidden'));
+
+saveApiKeyBtn.addEventListener('click', () => {
+const key = customApiKeyInput.value.trim();
+if (key) {
+localStorage.setItem('gemini_tts_apikey', key);
+showToast('Đã lưu API Key thành công!', 'success');
+} else {
+localStorage.removeItem('gemini_tts_apikey');
+showToast('Đã xóa API Key.', 'info');
+}
+apiModal.classList.add('hidden');
+});
+
+clearApiKeyBtn.addEventListener('click', () => {
+customApiKeyInput.value = '';
+localStorage.removeItem('gemini_tts_apikey');
+showToast('Đã xóa API Key.', 'info');
+});
+
+function showToast(msg, type = 'success') {
+const toast = document.getElementById('toast');
+const toastMsg = document.getElementById('toastMsg');
+const toastIcon = document.getElementById('toastIcon');
+
+toastMsg.textContent = msg;
+if (type === 'success') {
+toast.className = 'fixed bottom-5 right-5 cute-card border-emerald-300 bg-white px-4 py-3 rounded-2xl flex items-center gap-2.5 shadow-xl text-xs md:text-sm font-bold z-50 transition-all duration-300';
+toastIcon.className = 'fa-solid fa-circle-check text-emerald-500 text-lg';
+} else if (type === 'info') {
+toast.className = 'fixed bottom-5 right-5 cute-card border-blue-300 bg-white px-4 py-3 rounded-2xl flex items-center gap-2.5 shadow-xl text-xs md:text-sm font-bold z-50 transition-all duration-300';
+toastIcon.className = 'fa-solid fa-circle-info text-blue-500 text-lg';
+} else {
+toast.className = 'fixed bottom-5 right-5 cute-card border-pink-400 bg-white px-4 py-3 rounded-2xl flex items-center gap-2.5 shadow-xl text-xs md:text-sm font-bold z-50 transition-all duration-300';
+toastIcon.className = 'fa-solid fa-triangle-exclamation text-pink-500 text-lg';
+}
+
+toast.classList.remove('translate-y-20', 'opacity-0');
+setTimeout(() => {
+toast.classList.add('translate-y-20', 'opacity-0');
+}, 3500);
+}
+
+// ---------- CẤU HÌNH GIỌNG ĐỀU (chỉnh ở đây nếu cần) ----------
+const STYLE_PROMPT = "Đọc bằng giọng tiếng Việt chuẩn, trưởng thành, tự nhiên, giữ nguyên một giọng duy nhất, cao độ, tốc độ và âm lượng ổn định từ đầu đến cuối: ";
+const MAX_CHUNK_CHARS = 300;   // mỗi lần gửi tối đa ~300 ký tự -> giọng không bị "trôi"
+const MAX_RETRIES = 3;         // tự thử lại nếu Gemini trả về rỗng / lỗi tạm thời
+const TTS_TEMPERATURE = 0.2;   // thấp = giọng ổn định hơn
+const TTS_SEED = 42;           // cố định seed để các lần tạo giống nhau hơn
+const SPEED_FACTOR = 1.15;     // đặt 1.0 nếu thấy giọng bị cao/the thé (1.15 làm cao độ tăng lên)
+const TARGET_RMS = 3000;       // mức âm lượng chuẩn cho mọi đoạn
+const GAP_SENTENCE_MS = 220;   // khoảng nghỉ giữa các đoạn gửi
+const GAP_PARAGRAPH_MS = 450;  // khoảng nghỉ khi xuống dòng
+
+// Tách kịch bản thành các đoạn ngắn theo dòng -> câu -> dấu phẩy
+function splitIntoChunks(text) {
+  const chunks = [];
+  text.split(/\n+/).map(p => p.trim()).filter(Boolean).forEach(par => {
+    const pieces = [];
+    (par.match(/[^.!?…]+[.!?…]*["”')\]]*/g) || [par]).forEach(s => {
+      s = s.trim();
+      if (!s) return;
+      if (s.length > MAX_CHUNK_CHARS) {
+        (s.match(/[^,;:]+[,;:]?/g) || [s]).map(p => p.trim()).filter(Boolean).forEach(p => pieces.push(p));
+      } else {
+        pieces.push(s);
+      }
+    });
+    let cur = '';
+    pieces.forEach(p => {
+      if (cur && (cur + ' ' + p).length > MAX_CHUNK_CHARS) {
+        chunks.push({ text: cur, endOfParagraph: false });
+        cur = p;
+      } else {
+        cur = cur ? cur + ' ' + p : p;
+      }
+    });
+    if (cur) chunks.push({ text: cur, endOfParagraph: true });
+  });
+  return chunks;
+}
+
+// Gọi API cho 1 đoạn, tự thử lại khi lỗi tạm thời
+async function fetchChunkAudio(text, voiceId, apiKey) {
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+  const payload = {
+    contents: [{ parts: [{ text: STYLE_PROMPT + text }] }],
+    generationConfig: {
+      temperature: TTS_TEMPERATURE,
+      seed: TTS_SEED,
+      responseModalities: ["AUDIO"],
+      speechConfig: {
+        voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceId } }
+      }
+    }
+  };
+
+  let lastErr;
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      let response;
+      try {
+        response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch (networkErr) {
+        throw new Error("Lỗi kết nối mạng hoặc không gửi được yêu cầu. Vui lòng kiểm tra API Key!");
+      }
+
+      if (response.status === 400 || response.status === 403) {
+        apiModal.classList.remove('hidden');
+        const keyErr = new Error('Vui lòng kiểm tra hoặc dán lại Gemini API Key chính xác để tạo giọng nói!');
+        keyErr.fatal = true;
+        throw keyErr;
+      }
+      if (!response.ok) throw new Error(`Lỗi khởi tạo giọng nói (${response.status})`);
+
+      const result = await response.json();
+      const part = result?.candidates?.[0]?.content?.parts?.[0];
+      const audioData = part?.inlineData?.data;
+      if (!audioData) throw new Error('Dữ liệu âm thanh phản hồi bị trống. Hãy thử lại!');
+
+      const mimeType = part.inlineData.mimeType || "audio/L16;rate=24000";
+      const rateMatch = mimeType.match(/rate=(\d+)/);
+      return {
+        pcm: new Int16Array(base64ToArrayBuffer(audioData)),
+        sampleRate: rateMatch ? parseInt(rateMatch[1], 10) : 24000
+      };
+    } catch (err) {
+      if (err.fatal) throw err;
+      lastErr = err;
+      if (attempt < MAX_RETRIES) await new Promise(r => setTimeout(r, 1500 * attempt));
+    }
+  }
+  throw lastErr;
+}
+
+// Cắt khoảng lặng thừa đầu/cuối mỗi đoạn
+function trimSilence(pcm, sampleRate, threshold = 400, padMs = 60) {
+  let start = 0, end = pcm.length - 1;
+  while (start < end && Math.abs(pcm[start]) < threshold) start++;
+  while (end > start && Math.abs(pcm[end]) < threshold) end--;
+  const pad = Math.round(sampleRate * padMs / 1000);
+  return pcm.slice(Math.max(0, start - pad), Math.min(pcm.length, end + pad + 1));
+}
+
+// Đưa mọi đoạn về cùng mức âm lượng
+function normalizeLoudness(pcm) {
+  let sum = 0, n = 0, peak = 0;
+  for (let i = 0; i < pcm.length; i++) {
+    const a = Math.abs(pcm[i]);
+    if (a > peak) peak = a;
+    if (a > 300) { sum += a * a; n++; }
+  }
+  if (!n || !peak) return pcm;
+  const rms = Math.sqrt(sum / n);
+  let gain = Math.min(Math.max(TARGET_RMS / rms, 0.4), 3);
+  gain = Math.min(gain, 30000 / peak); // không để bị vỡ tiếng
+  const out = new Int16Array(pcm.length);
+  for (let i = 0; i < pcm.length; i++) {
+    out[i] = Math.max(-32768, Math.min(32767, Math.round(pcm[i] * gain)));
+  }
+  return out;
+}
+
+// Ghép các đoạn lại, chèn khoảng nghỉ đều nhau
+function joinPcm(pieces, sampleRate) {
+  const gaps = pieces.map((p, i) =>
+    i === pieces.length - 1 ? 0 : Math.round(sampleRate * (p.endOfParagraph ? GAP_PARAGRAPH_MS : GAP_SENTENCE_MS) / 1000)
+  );
+  const total = pieces.reduce((s, p, i) => s + p.pcm.length + gaps[i], 0);
+  const merged = new Int16Array(total);
+  let offset = 0;
+  pieces.forEach((p, i) => {
+    merged.set(p.pcm, offset);
+    offset += p.pcm.length + gaps[i];
+  });
+  return merged;
+}
+
+// Hàm chính (giữ nguyên tên và tham số như bản cũ)
+async function generateSpeechInternal(text, voiceObj, isPreview = false) {
+  const cleanText = text.trim();
+  const userApiKey = localStorage.getItem('gemini_tts_apikey') || "";
+
+  const chunks = splitIntoChunks(cleanText);
+  if (!chunks.length) throw new Error('Kịch bản đang trống!');
+
+  const pieces = [];
+  let sampleRate = 24000;
+
+  // Tạo tuần tự từng đoạn với CÙNG giọng + CÙNG cấu hình
+  for (let i = 0; i < chunks.length; i++) {
+    if (!isPreview && chunks.length > 1) {
+      generateBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Đang đọc ${i + 1}/${chunks.length}...`;
+    }
+    const { pcm, sampleRate: sr } = await fetchChunkAudio(chunks[i].text, voiceObj.id, userApiKey);
+    sampleRate = sr;
+    pieces.push({
+      pcm: normalizeLoudness(trimSilence(pcm, sr)),
+      endOfParagraph: chunks[i].endOfParagraph
+    });
+  }
+
+  const merged = joinPcm(pieces, sampleRate);
+  const wavBlob = pcmToWav(merged, Math.round(sampleRate * SPEED_FACTOR));
+  const audioUrl = URL.createObjectURL(wavBlob);
+
+  updateActivePlayer(audioUrl, voiceObj, cleanText);
+
+  if (!isPreview) {
+    addHistoryItem({
+      id: Date.now().toString(),
+      voice: voiceObj,
+      text: cleanText,
+      audioUrl: audioUrl,
+      timestamp: Date.now()
+    });
+  }
+
+  return audioUrl;
+}
+
+// Nút Tạo Giọng Nói Ngay (Sẽ lưu vào Lịch sử)
+generateBtn.addEventListener('click', async () => {
+const text = ttsInput.value.trim();
+if (!text) {
+showToast('Vui lòng nhập kịch bản Threads!', 'error');
+return;
+}
+
+const voiceObj = VOICES.find(v => v.id === selectedVoiceId);
+
+generateBtn.disabled = true;
+generateBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Đang đọc...`;
+
+try {
+// isPreview = false -> Sẽ lưu vào lịch sử
+await generateSpeechInternal(text, voiceObj, false);
+showToast('Tạo giọng đọc thành công và đã lưu vào lịch sử!', 'success');
+} catch (err) {
+console.error(err);
+showToast(err.message || 'Không thể tạo âm thanh. Thử lại sau ít phút!', 'error');
+} finally {
+generateBtn.disabled = false;
+generateBtn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Tạo Giọng Nói Ngay!`;
+}
+});
+
+function updateActivePlayer(url, voice, text) {
+playerPlaceholder.classList.add('hidden');
+activePlayerContainer.classList.remove('hidden');
+activePlayerContainer.classList.add('flex');
+
+mainAudioPlayer.src = url;
+mainAudioPlayer.load();
+mainAudioPlayer.play().catch(e => console.log("Auto-play blocked:", e));
+
+activeVoiceBadge.textContent = voice.gender;
+activeVoiceBadge.className = voice.gender === 'Nữ'
+? 'bg-pink-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full'
+: 'bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full';
+
+activeVoiceName.textContent = voice.name;
+activeTextPreview.textContent = `"${text}"`;
+
+downloadCapCutBtn.href = url;
+downloadCapCutBtn.download = `threads_${voice.id}_${Date.now()}.wav`;
+}
+
+function addHistoryItem(item) {
+audioHistory.unshift(item);
+saveHistoryToStorage();
+renderHistoryUI();
+}
+
+function renderHistoryUI() {
+historyList.innerHTML = '';
+
+if (audioHistory.length === 0) {
+historyList.innerHTML = `
+<div class="text-center py-6 text-gray-400 text-xs">
+Chưa có lịch sử. Âm thanh chính thức sẽ được lưu tự động trong 30 phút.
+</div>
+`;
+return;
+}
+
+const now = Date.now();
+
+audioHistory.forEach(item => {
+const timeLeftMs = HISTORY_EXPIRATION_MS - (now - item.timestamp);
+const minutesLeft = Math.max(0, Math.ceil(timeLeftMs / 60000));
+
+const div = document.createElement('div');
+div.className = 'p-3 bg-white rounded-2xl border border-pink-200 flex items-center justify-between gap-2 hover:border-pink-400 transition shadow-sm';
+
+div.innerHTML = `
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-1.5 mb-1">
+<span class="text-[9px] font-bold px-1.5 py-0.2 rounded-full ${item.voice.gender === 'Nữ' ? 'bg-pink-100 text-pink-600' : 'bg-emerald-100 text-emerald-600'}">
+${item.voice.name}
+</span>
+<span class="text-[10px] text-gray-400 flex items-center gap-1">
+<i class="fa-regular fa-clock"></i> còn ${minutesLeft} phút
+</span>
+</div>
+<p class="text-xs text-gray-700 truncate font-medium">${item.text}</p>
+</div>
+<div class="flex items-center gap-1.5 shrink-0">
+<button onclick="playHistoryItem('${item.id}')" class="w-7 h-7 bg-pink-100 hover:bg-pink-200 text-pink-600 rounded-xl flex items-center justify-center text-xs transition" title="Nghe lại">
+<i class="fa-solid fa-play"></i>
+</button>
+${item.audioUrl ? `<a href="${item.audioUrl}" download="threads_${item.voice.id}.wav" class="w-7 h-7 bg-emerald-100 hover:bg-emerald-200 text-emerald-600 rounded-xl flex items-center justify-center text-xs transition" title="Tải về CapCut">
+<i class="fa-solid fa-download"></i>
+</a>` : ''}
+</div>
+`;
+
+historyList.appendChild(div);
+});
+}
+
+window.playHistoryItem = function(id) {
+const item = audioHistory.find(h => h.id === id);
+if (item && item.audioUrl) {
+updateActivePlayer(item.audioUrl, item.voice, item.text);
+}
+};
+
+function cleanExpiredHistory() {
+const now = Date.now();
+const initialLen = audioHistory.length;
+audioHistory = audioHistory.filter(item => (now - item.timestamp) < HISTORY_EXPIRATION_MS);
+
+if (audioHistory.length !== initialLen) {
+saveHistoryToStorage();
+renderHistoryUI();
+}
+}
+
+function saveHistoryToStorage() {
+const cleanStorage = audioHistory.map(h => ({
+id: h.id,
+voice: h.voice,
+text: h.text,
+timestamp: h.timestamp
+}));
+localStorage.setItem('threads_tts_history', JSON.stringify(cleanStorage));
+}
+
+function loadHistoryFromStorage() {
+try {
+const stored = localStorage.getItem('threads_tts_history');
+if (stored) {
+const parsed = JSON.parse(stored);
+const now = Date.now();
+audioHistory = parsed.filter(item => (now - item.timestamp) < HISTORY_EXPIRATION_MS);
+renderHistoryUI();
+}
+} catch (e) {
+console.error("Lỗi đọc lịch sử", e);
+}
+}
+
+function base64ToArrayBuffer(base64) {
+const binaryString = atob(base64);
+const len = binaryString.length;
+const bytes = new Uint8Array(len);
+for (let i = 0; i < len; i++) {
+bytes[i] = binaryString.charCodeAt(i);
+}
+return bytes.buffer;
+}
+
+function pcmToWav(pcm16Array, sampleRate = 24000) {
+const numChannels = 1;
+const bytesPerSample = 2;
+const dataSize = pcm16Array.length * bytesPerSample;
+const buffer = new ArrayBuffer(44 + dataSize);
+const view = new DataView(buffer);
+
+writeString(view, 0, 'RIFF');
+view.setUint32(4, 36 + dataSize, true);
+writeString(view, 8, 'WAVE');
+writeString(view, 12, 'fmt ');
+view.setUint32(16, 16, true);
+view.setUint16(20, 1, true);
+view.setUint16(22, numChannels, true);
+view.setUint32(24, sampleRate, true);
+view.setUint32(28, sampleRate * numChannels * bytesPerSample, true);
+view.setUint16(32, numChannels * bytesPerSample, true);
+view.setUint16(34, 16, true);
+writeString(view, 36, 'data');
+view.setUint32(40, dataSize, true);
+
+let offset = 44;
+for (let i = 0; i < pcm16Array.length; i++, offset += 2) {
+view.setInt16(offset, pcm16Array[i], true);
+}
+
+return new Blob([buffer], { type: 'audio/wav' });
+}
+
+function writeString(view, offset, string) {
+for (let i = 0; i < string.length; i++) {
+view.setUint8(offset + i, string.charCodeAt(i));
+}
+}
+</script>
+</body>
+</html>
